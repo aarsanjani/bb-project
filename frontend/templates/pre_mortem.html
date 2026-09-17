@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo Pre-Mortem: Supply-Chain Digital Twin</title>
+    <link rel="stylesheet" href="/static/css/pre_mortem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="theme-pre-mortem">
+    <!-- Top Global Header -->
+    <header class="pm-header">
+        <div class="pm-header-left">
+            <div class="pm-title-group">
+                <div class="pm-brand">
+                    <span class="pm-logo-text">Promo Pre-Mortem</span>
+                    <span class="pm-subtitle">toy supply-chain digital twin &mdash; what breaks, and what to do about it</span>
+                </div>
+            </div>
+        </div>
+        <div class="pm-header-right">
+            <nav class="pm-nav-tabs">
+                <button class="pm-tab-btn active" data-tab="overview">Overview</button>
+                <button class="pm-tab-btn" data-tab="network">Network</button>
+                <button class="pm-tab-btn" data-tab="sku_geo">SKU &times; Geo</button>
+                <button class="pm-tab-btn" data-tab="constraints">Constraints</button>
+                <button class="pm-tab-btn" data-tab="interventions">Interventions</button>
+                <button class="pm-tab-btn" data-tab="raw_data">Raw data</button>
+            </nav>
+            <a href="/" class="pm-view-switch-btn" title="Switch to ADK 2.x Cognitive Handoff View">
+                ⚡ Agentic Diagnostic UI
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Digital Twin Cockpit -->
+    <div class="pm-layout">
+        <!-- Left Column: Controls & Levers -->
+        <aside class="pm-sidebar">
+            <!-- Campaign Levers -->
+            <section class="pm-control-card">
+                <div class="pm-card-title">CAMPAIGN LEVERS</div>
+                
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Horizon</label>
+                        <span class="pm-val" id="val_horizon">23 d</span>
+                    </div>
+                    <input type="range" id="slider_horizon" min="5" max="45" value="23" step="1">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Discount multiplier</label>
+                        <span class="pm-val" id="val_discount">0.60x</span>
+                    </div>
+                    <input type="range" id="slider_discount" min="0.20" max="1.00" value="0.60" step="0.05">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Media multiplier</label>
+                        <span class="pm-val" id="val_media">1.00x</span>
+                    </div>
+                    <input type="range" id="slider_media" min="0.20" max="3.00" value="1.00" step="0.10">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Demand uncertainty</label>
+                        <span class="pm-val" id="val_uncertainty">12%</span>
+                    </div>
+                    <input type="range" id="slider_uncertainty" min="0" max="40" value="12" step="1">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Scenario draw (seed)</label>
+                        <span class="pm-val" id="val_seed">7</span>
+                    </div>
+                    <input type="range" id="slider_seed" min="1" max="20" value="7" step="1">
+                </div>
+            </section>
+
+            <!-- Stress The World -->
+            <section class="pm-control-card">
+                <div class="pm-card-title">STRESS THE WORLD</div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Supplier slip</label>
+                        <span class="pm-val" id="val_supplier_slip">8 d</span>
+                    </div>
+                    <input type="range" id="slider_supplier_slip" min="0" max="25" value="8" step="1">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Warehouse capacity</label>
+                        <span class="pm-val" id="val_wh_capacity">70%</span>
+                    </div>
+                    <input type="range" id="slider_wh_capacity" min="30" max="100" value="70" step="5">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Channel capacity</label>
+                        <span class="pm-val" id="val_channel_capacity">100%</span>
+                    </div>
+                    <input type="range" id="slider_channel_capacity" min="30" max="100" value="100" step="5">
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Competitor response</label>
+                        <span class="pm-val" id="val_competitor_response">25%</span>
+                    </div>
+                    <input type="range" id="slider_competitor_response" min="0" max="60" value="25" step="5">
+                </div>
+            </section>
+
+            <!-- Optimize For -->
+            <section class="pm-control-card">
+                <div class="pm-card-title">OPTIMIZE FOR</div>
+
+                <div class="pm-form-group">
+                    <select id="select_optimize_for" class="pm-select">
+                        <option value="Balanced (margin + service)">Balanced (margin + service)</option>
+                        <option value="Max Revenue">Max Revenue</option>
+                        <option value="Max Margin">Max Margin</option>
+                        <option value="Zero Stockouts">Zero Stockouts</option>
+                    </select>
+                </div>
+
+                <div class="pm-slider-group">
+                    <div class="pm-slider-header">
+                        <label>Greedy rounds</label>
+                        <span class="pm-val" id="val_greedy_rounds">4</span>
+                    </div>
+                    <input type="range" id="slider_greedy_rounds" min="1" max="10" value="4" step="1">
+                </div>
+
+                <button id="btnFindInterventions" class="pm-btn pm-btn-accent">
+                    Find best interventions
+                </button>
+                <button id="btnResetEverything" class="pm-btn pm-btn-secondary">
+                    Reset everything
+                </button>
+            </section>
+        </aside>
+
+        <!-- Right Main Canvas Area -->
+        <main class="pm-main-content">
+            <!-- TAB 1: OVERVIEW -->
+            <div class="pm-tab-pane active" id="pane_overview">
+                <!-- Top KPI Strip -->
+                <div class="pm-kpi-card">
+                    <div class="pm-card-title">CAMPAIGN OUTCOME</div>
+                    <div class="pm-kpi-grid">
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">UNITS SOLD</span>
+                            <span class="kpi-val" id="kpi_units_sold">271,657</span>
+                        </div>
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">REVENUE</span>
+                            <span class="kpi-val" id="kpi_revenue">$22.77M</span>
+                        </div>
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">GROSS MARGIN</span>
+                            <span class="kpi-val" id="kpi_margin">$8.27M</span>
+                        </div>
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">SERVICE LEVEL</span>
+                            <span class="kpi-val" id="kpi_service_level">76.4%</span>
+                        </div>
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">UNSERVED DEMAND</span>
+                            <span class="kpi-val" id="kpi_unserved">83,712 u</span>
+                            <span class="kpi-subtext" id="kpi_unserved_dollars">$7.02M at risk</span>
+                        </div>
+                        <div class="pm-kpi-tile">
+                            <span class="kpi-label">PROMO + LOGISTICS SPEND</span>
+                            <span class="kpi-val" id="kpi_spend">$1.33M</span>
+                            <span class="kpi-subtext" id="kpi_spend_subtext">media $1.33M</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Headline Risks & Breaches Strip -->
+                <div class="pm-card pm-risks-card">
+                    <div class="pm-card-title">HEADLINE RISKS</div>
+                    <div class="pm-risks-summary" id="headlineSummaryText">8 hard breaches, 10 tight constraints.</div>
+                    <div class="pm-breach-list" id="breachListContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Middle Charts Grid: Demand vs Fulfilled & Lost Units -->
+                <div class="pm-charts-grid">
+                    <!-- Demand vs Fulfilled SVG Chart -->
+                    <div class="pm-card pm-chart-card">
+                        <div class="pm-card-title">DAILY DEMAND VS FULFILLED</div>
+                        <div class="pm-svg-chart-wrapper" id="timeSeriesChartWrapper">
+                            <svg id="demandChartSvg" viewBox="0 0 600 180" class="pm-chart-svg"></svg>
+                        </div>
+                        <div class="pm-chart-legend">
+                            <span class="legend-item"><span class="legend-dot dot-demand"></span> demand</span>
+                            <span class="legend-item"><span class="legend-dot dot-fulfilled"></span> fulfilled</span>
+                            <span class="legend-scale" id="chartDayScale">day 1 to day 23</span>
+                        </div>
+                    </div>
+
+                    <!-- Where the units are lost -->
+                    <div class="pm-card pm-loss-card">
+                        <div class="pm-card-title">WHERE THE UNITS ARE LOST</div>
+                        <div class="pm-loss-items" id="lossItemsContainer">
+                            <div class="pm-loss-row">
+                                <span class="loss-label">Out of stock</span>
+                                <div class="loss-bar-track">
+                                    <div class="loss-bar-fill fill-stockout" id="bar_out_of_stock" style="width: 85%;"></div>
+                                </div>
+                                <span class="loss-count" id="count_out_of_stock">76,226</span>
+                            </div>
+                            <div class="pm-loss-row">
+                                <span class="loss-label">Channel order cap</span>
+                                <div class="loss-bar-track">
+                                    <div class="loss-bar-fill fill-channel" id="bar_channel_cap" style="width: 0%;"></div>
+                                </div>
+                                <span class="loss-count" id="count_channel_cap">0</span>
+                            </div>
+                            <div class="pm-loss-row">
+                                <span class="loss-label">DC throughput</span>
+                                <div class="loss-bar-track">
+                                    <div class="loss-bar-fill fill-dc" id="bar_dc_throughput" style="width: 15%;"></div>
+                                </div>
+                                <span class="loss-count" id="count_dc_throughput">7,486</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Per-SKU Outcome Table -->
+                <div class="pm-card pm-table-card">
+                    <div class="pm-card-title">PER-SKU OUTCOME</div>
+                    <div class="pm-table-responsive">
+                        <table class="pm-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Disc</th>
+                                    <th>Media</th>
+                                    <th>Demand</th>
+                                    <th>Sold</th>
+                                    <th>Fill</th>
+                                    <th>Unserved</th>
+                                    <th>Revenue</th>
+                                    <th>Margin</th>
+                                    <th>SO days</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skuTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: NETWORK TOPOLOGY -->
+            <div class="pm-tab-pane" id="pane_network">
+                <div class="pm-card">
+                    <div class="pm-card-title">SUPPLY CHAIN DIGITAL TWIN NETWORK MAP</div>
+                    <div class="network-map-container">
+                        <div class="network-tier">
+                            <h4>Global Suppliers (3)</h4>
+                            <div class="node-box" id="node_hanoi">Hanoi Components<br><small>Limit: 101,857 | Lead: 39d</small></div>
+                            <div class="node-box">Taipei MicroSilicon<br><small>Limit: 85,000 | Lead: 18d</small></div>
+                            <div class="node-box">Shenzhen Precision Audio<br><small>Limit: 95,000 | Lead: 24d</small></div>
+                        </div>
+                        <div class="network-connector-arrow">&rarr;</div>
+                        <div class="network-tier">
+                            <h4>Regional DCs (4)</h4>
+                            <div class="node-box breach-node" id="node_amsterdam">Amsterdam DC<br><small>4,679 vs 3,220 cap</small></div>
+                            <div class="node-box breach-node" id="node_singapore">Singapore DC<br><small>3,664 vs 2,660 cap</small></div>
+                            <div class="node-box">Chicago Central DC<br><small>5,800 vs 6,500 cap</small></div>
+                        </div>
+                        <div class="network-connector-arrow">&rarr;</div>
+                        <div class="network-tier">
+                            <h4>Channels & Stores</h4>
+                            <div class="node-box">Omnichannel SFS (22%)</div>
+                            <div class="node-box">BOPIS Lockers (34%)</div>
+                            <div class="node-box">Retail Flagships (14%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: SKU x GEO -->
+            <div class="pm-tab-pane" id="pane_sku_geo">
+                <div class="pm-card">
+                    <div class="pm-card-title">SKU &times; GEOGRAPHY DEMAND HEATMAP</div>
+                    <div class="pm-table-responsive">
+                        <table class="pm-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>North America (Chicago)</th>
+                                    <th>EMEA (Amsterdam)</th>
+                                    <th>APAC (Singapore)</th>
+                                    <th>LATAM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Aurora Earbuds Pro</strong></td>
+                                    <td><span class="geo-badge high">18,400 u (Stockout D4)</span></td>
+                                    <td><span class="geo-badge critical">16,200 u (Breach D2)</span></td>
+                                    <td><span class="geo-badge critical">12,100 u (Breach D3)</span></td>
+                                    <td><span class="geo-badge ok">2,938 u (OK)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pulse Fitness Band</strong></td>
+                                    <td><span class="geo-badge critical">14,200 u (Breach D3)</span></td>
+                                    <td><span class="geo-badge critical">12,800 u (Breach D2)</span></td>
+                                    <td><span class="geo-badge critical">9,400 u (Breach D2)</span></td>
+                                    <td><span class="geo-badge ok">2,000 u (OK)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Aurora Headphones</strong></td>
+                                    <td><span class="geo-badge ok">11,200 u (98% Fill)</span></td>
+                                    <td><span class="geo-badge ok">6,800 u (98% Fill)</span></td>
+                                    <td><span class="geo-badge ok">3,900 u (97% Fill)</span></td>
+                                    <td><span class="geo-badge ok">880 u (OK)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: CONSTRAINTS -->
+            <div class="pm-tab-pane" id="pane_constraints">
+                <div class="pm-card">
+                    <div class="pm-card-title">ACTIVE CONSTRAINTS & BOTTLENECK THRESHOLDS</div>
+                    <div class="pm-constraints-list" id="constraintsDetailedList">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: INTERVENTIONS -->
+            <div class="pm-tab-pane" id="pane_interventions">
+                <div class="pm-card">
+                    <div class="pm-card-title">AUTONOMOUS INTERVENTION SOLVER (GREEDY OPTIMIZER)</div>
+                    <div class="pm-interventions-deck" id="interventionsDeck">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: RAW DATA -->
+            <div class="pm-tab-pane" id="pane_raw_data">
+                <div class="pm-card">
+                    <div class="pm-card-title">EXPORTABLE SIMULATION TELEMETRY JSON</div>
+                    <pre class="pm-json-viewer" id="rawJsonViewer"></pre>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/pre_mortem.js"></script>
+</body>
+</html>

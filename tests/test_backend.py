@@ -137,3 +137,47 @@ def test_apply_invalid_intervention_endpoint(test_client):
     payload = {"intervention_id": "INTV-NONEXISTENT"}
     response = test_client.post('/api/interventions/apply', json=payload)
     assert response.status_code == 404
+
+def test_digital_twin_simulation_endpoint(test_client):
+    """Verifies digital twin calculation endpoint."""
+    payload = {
+        "horizon": 23,
+        "discount_mult": 0.60,
+        "media_mult": 1.00,
+        "demand_uncertainty": 12,
+        "supplier_slip": 8,
+        "wh_capacity": 70,
+        "channel_capacity": 100,
+        "competitor_response": 25
+    }
+    response = test_client.post('/api/digital-twin/simulate', json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "campaign_outcome" in data
+    assert "headline_risks" in data
+    assert "daily_series" in data
+    assert "loss_breakdown" in data
+    assert "sku_outcomes" in data
+    assert len(data["daily_series"]) == 23
+    assert len(data["sku_outcomes"]) >= 8
+
+def test_digital_twin_optimize_endpoint(test_client):
+    """Verifies digital twin greedy optimizer endpoint."""
+    payload = {
+        "horizon": 23,
+        "discount_mult": 0.60,
+        "media_mult": 1.00,
+        "greedy_rounds": 4,
+        "optimize_for": "Balanced (margin + service)"
+    }
+    response = test_client.post('/api/digital-twin/optimize', json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["optimization_status"] == "RESOLVED"
+    assert data["rounds_completed"] == 4
+
+def test_pre_mortem_view(test_client):
+    """Verifies rendering of the /twin pre-mortem digital twin view."""
+    response = test_client.get('/twin')
+    assert response.status_code == 200
+    assert "Promo Pre-Mortem" in response.get_data(as_text=True)

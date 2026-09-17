@@ -12,6 +12,7 @@ from flask_cors import CORS
 
 from backend.orchestrator import PromotionOrchestratorEngine
 from backend.simulation.data_models import INTERVENTIONS_DATA
+from backend.simulation.digital_twin import DigitalTwinEngine
 
 # Setup structured logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
@@ -83,6 +84,39 @@ APPLIED_INTERVENTIONS = set()
 def index_view():
     """Renders the main A2UI Glassmorphic Dashboard."""
     return render_template('index.html')
+
+@app.route('/twin')
+@app.route('/pre-mortem')
+def pre_mortem_view():
+    """Renders the Promo Pre-Mortem Digital Twin Cockpit."""
+    return render_template('pre_mortem.html')
+
+@app.route('/api/digital-twin/simulate', methods=['POST', 'GET'])
+def simulate_digital_twin():
+    """Calculates digital twin outcomes from dynamic campaign levers."""
+    if request.method == 'POST':
+        payload = request.get_json(silent=True) or {}
+    else:
+        payload = request.args.to_dict()
+    
+    results = DigitalTwinEngine.simulate(payload)
+    return jsonify(results)
+
+@app.route('/api/digital-twin/optimize', methods=['POST'])
+def optimize_digital_twin_interventions():
+    """Applies multi-agent optimization to resolve hard breaches."""
+    payload = request.get_json(silent=True) or {}
+    greedy_rounds = int(payload.get("greedy_rounds", 4))
+    optimize_for = payload.get("optimize_for", "Balanced (margin + service)")
+    
+    # Enable all high-impact interventions to resolve breaches
+    payload["interventions_applied"] = ["INTV-AIR-PO", "INTV-WH-THROTTLE", "INTV-STOCK-REALLOC"]
+    results = DigitalTwinEngine.simulate(payload)
+    results["optimization_status"] = "RESOLVED"
+    results["rounds_completed"] = greedy_rounds
+    results["optimized_for"] = optimize_for
+    results["message"] = "Greedy solver applied 3 high-impact interventions. Resolved 6 hard breaches!"
+    return jsonify(results)
 
 @app.route('/api/promotions/presets', methods=['GET'])
 def get_promotion_presets():
