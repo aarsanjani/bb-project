@@ -181,3 +181,122 @@ def test_pre_mortem_view(test_client):
     response = test_client.get('/twin')
     assert response.status_code == 200
     assert "Promo Pre-Mortem" in response.get_data(as_text=True)
+
+
+def test_cross_agent_state_propagation():
+    """
+    Verifies that agents interact functionally via shared session_state:
+    StoreDemandAgent -> SkuInventoryAgent -> SupplierCapacityAgent -> FulfillmentLogisticsAgent.
+    """
+    session_state = {}
+    promo_params = {
+        "name": "Flash 48-Hour Omni-Deals (40% Off Storewide)",
+        "duration_days": 2,
+        "target_discount_pct": "40%",
+        "forecast_multiplier": 3.8,
+    }
+
+    store_agent = StoreDemandAgent()
+    sku_agent = SkuInventoryAgent()
+    supplier_agent = SupplierCapacityAgent()
+    fulfillment_agent = FulfillmentLogisticsAgent()
+
+    # 1. Store agent writes store_findings into session_state
+    store_res = store_agent.analyze(promo_params, session_state=session_state)
+    assert "store_findings" in session_state
+    assert session_state["store_findings"]["total_projected_store_units"] == store_res["metrics"]["total_projected_store_units"]
+
+    # 2. SKU agent consumes store_findings from session_state and writes sku_findings
+    sku_res = sku_agent.analyze(promo_params, session_state=session_state)
+    assert "sku_findings" in session_state
+    assert "sku_deficits_by_id" in session_state["sku_findings"]
+    assert session_state["sku_findings"]["upstream_store_units"] == store_res["metrics"]["total_projected_store_units"]
+
+    # 3. Supplier agent consumes sku_findings (deficits & depletion timeline) from session_state
+    sup_res = supplier_agent.analyze(promo_params, session_state=session_state)
+    assert "supplier_findings" in session_state
+    assert session_state["supplier_findings"]["total_expedited_surcharge_num"] > 0
+    assert sup_res["metrics"]["upstream_sku_deficit_units"] == session_state["sku_findings"]["deficit_units_num"]
+
+    # 4. Fulfillment agent consumes both store_findings and sku_findings from session_state
+    ful_res = fulfillment_agent.analyze(promo_params, session_state=session_state)
+    assert "fulfillment_findings" in session_state
+    assert ful_res["metrics"]["total_omnichannel_orders"] > 0
+
+
+def test_dynamic_parameter_sensitivity_across_presets():
+    """
+    Verifies that changing promotional parameters (e.g. Flash 40% Off vs Fall 25% Off)
+    dynamically changes subagent outputs and orchestrator A2UI KPIs.
+    """
+    flash_engine = PromotionOrchestratorEngine(
+        session_id="test-flash",
+        declarative_intent="Simulate 48-hour flash sale at 40% off",
+        promo_parameters={
+            "name": "Flash 48-Hour Omni-Deals",
+            "duration_days": 2,
+            "target_discount_pct": "40%",
+            "forecast_multiplier": 3.8,
+        }
+    )
+    gentle_engine = PromotionOrchestratorEngine(
+        session_id="test-gentle",
+        declarative_intent="Simulate 7-day fall home campaign at 25% off",
+        promo_parameters={
+            "name": "Fall Home Essentials",
+            "duration_days": 7,
+            "target_discount_pct": "25%",
+            "forecast_multiplier": 1.8,
+        }
+    )
+
+    flash_frames = [json.loads(f) for f in flash_engine.execute_workflow()]
+    gentle_frames = [json.loads(f) for f in gentle_engine.execute_workflow()]
+
+    flash_complete = [f["params"] for f in flash_frames if f["method"] == "onSimulationComplete"][0]
+    gentle_complete = [f["params"] for f in gentle_frames if f["method"] == "onSimulationComplete"][0]
+
+    # Flash sale (3.8x multiplier) must generate higher projected demand and risk than Gentle sale (1.8x)
+    assert flash_complete["projected_revenue_impact"] != gentle_complete["projected_revenue_impact"]
+    assert flash_engine.session_state["store_findings"]["total_projected_store_units"] > (
+        gentle_engine.session_state["store_findings"]["total_projected_store_units"]
+    )
+    assert flash_engine.session_state["sku_findings"]["deficit_units_num"] > (
+        gentle_engine.session_state["sku_findings"]["deficit_units_num"]
+    )
+
+
+def test_closed_loop_intervention_effect():
+    """
+    Verifies that applying interventions (INTV-01, INTV-02, INTV-03, INTV-04)
+    measurably mitigates stockouts, SKU deficits, and BOPIS/SFS channel overload when re-simulated.
+    """
+    base_params = {
+        "name": "Summer Electronics & Appliance Blast (30-35% Off)",
+        "duration_days": 4,
+        "target_discount_pct": "28-35%",
+        "forecast_multiplier": 2.7,
+        "applied_interventions": []
+    }
+    mitigated_params = {
+        "name": "Summer Electronics & Appliance Blast (30-35% Off)",
+        "duration_days": 4,
+        "target_discount_pct": "28-35%",
+        "forecast_multiplier": 2.7,
+        "applied_interventions": ["INTV-01", "INTV-02", "INTV-03", "INTV-04"]
+    }
+
+    base_engine = PromotionOrchestratorEngine("sim-base", "Base run", promo_parameters=base_params)
+    list(base_engine.execute_workflow())
+
+    mitigated_engine = PromotionOrchestratorEngine("sim-mitigated", "Mitigated run", promo_parameters=mitigated_params)
+    list(mitigated_engine.execute_workflow())
+
+    # Net unbridged SKU deficit and BOPIS overload must decrease when interventions are active
+    assert mitigated_engine.session_state["sku_findings"]["net_unmitigated_deficit"] < (
+        base_engine.session_state["sku_findings"]["net_unmitigated_deficit"]
+    )
+    assert mitigated_engine.session_state["fulfillment_findings"]["bopis_utilization_num"] < (
+        base_engine.session_state["fulfillment_findings"]["bopis_utilization_num"]
+    )
+

@@ -12,12 +12,12 @@
 
 ## 📑 Table of Contents
 1. [Executive System Overview](#-executive-system-overview)
-2. [Architectural Blueprint & Topology](#-architectural-blueprint--topology)
-3. [Multi-Agent Core & 4-Pillar Mesh](#-multi-agent-core--4-pillar-mesh)
+2. [Architectural Blueprint & State-Coupled Topology](#-architectural-blueprint--state-coupled-topology)
+3. [Multi-Agent Core & 4-Pillar State Propagation Mesh](#-multi-agent-core--4-pillar-state-propagation-mesh)
 4. [Fractal Chain of Thought (FCoT) Synthesis](#-fractal-chain-of-thought-fcot-synthesis)
 5. [A2UI Schema-Driven Dynamic Component Factory](#-a2ui-schema-driven-dynamic-component-factory)
 6. [Real-Time SSE JSON-RPC 2.0 Telemetry Stream](#-real-time-sse-json-rpc-20-telemetry-stream)
-7. [Prescriptive Interventions & Circuit Breakers](#-prescriptive-interventions--circuit-breakers)
+7. [Closed-Loop Prescriptive Interventions & Circuit Breakers](#-closed-loop-prescriptive-interventions--circuit-breakers)
 8. [Repository Structure](#-repository-structure)
 9. [Quickstart & Local Installation](#-quickstart--local-installation)
 10. [Automated Verification & Test Suite](#-automated-verification--test-suite)
@@ -65,66 +65,68 @@ Traditional retail promotion planning relies on siloed, static spreadsheet forec
 
 ---
 
-## 📐 Architectural Blueprint & Topology
+## 📐 Architectural Blueprint & State-Coupled Topology
 
-The system enforces a strict **Hub-and-Spoke Topology** and a clean **Stateless Presentation / Stateful Orchestration Boundary**:
+The system enforces a strict **Hub-and-Spoke Topology**, a **Stateless Presentation / Stateful Orchestration Boundary**, and a **Shared Blackboard (`session_state`)** where each specialist agent's findings mathematically constrain downstream agents:
 
 ```mermaid
-graph TD
-    %% Frontend Topology
-    subgraph Client ["A2UI Presentation Layer (Client Engine)"]
-        UI_View["Glassmorphic Dashboard (HTML5/CSS3)"]
-        UI_Factory["Dynamic Component Factory (app.js)"]
-        Mesh_Visualizer["Topology Mesh Live Glow Indicator"]
-        UI_View <--> UI_Factory
-        UI_Factory --> Mesh_Visualizer
-    end
+sequenceDiagram
+    participant UI as A2UI Client (app.js)
+    participant Orch as LeadPromotionOrchestrator
+    participant State as Shared Blackboard (session_state)
+    participant Store as store_demand_agent
+    participant SKU as sku_inventory_agent
+    participant Sup as supplier_capacity_agent
+    participant Ful as fulfillment_logistics_agent
 
-    %% Protocol Boundary
-    UI_View -->|HTTP POST /api/chat/stream| Controller["Reactive Streaming Controller (Flask/WSGI)"]
-    Controller -->|Server-Sent Events SSE Stream| UI_Factory
+    UI->>Orch: GET /api/chat/stream (prompt, preset_id, applied_interventions)
+    Orch->>State: Disambiguate intent -> Write promo_parameters & active guardrails
 
-    %% Backend Topology
-    subgraph Backend ["ADK 2.x Multi-Agent Mesh (Serverless Runtime)"]
-        Controller -->|Spawns & Tracks| Orchestrator["Lead Promotion Orchestrator (Synthesizer)"]
-        
-        subgraph WorkerMesh ["Decoupled Specialist Worker Mesh"]
-            Orchestrator -->|Turn 1: Store Routing| Agent_Store["store_demand_agent (Foot Traffic & Stockouts)"]
-            Orchestrator -->|Turn 2: SKU Routing| Agent_SKU["sku_inventory_agent (Elasticity & GMROI)"]
-            Orchestrator -->|Turn 3: Supplier Routing| Agent_Sup["supplier_capacity_agent (Lead Times & OTIF)"]
-            Orchestrator -->|Turn 4: Channel Routing| Agent_Ful["fulfillment_logistics_agent (BOPIS/SFS/DC)"]
-        end
+    Orch->>Store: Turn 1: run_store_network_demand_model()
+    Store->>State: Write store_findings (total_projected_store_units, demand_uplift_ratio, critical_store_ids)
 
-        WorkerMesh -->|Audit Telemetry| TraceLogger["Structured Audit Logger"]
-    end
+    Orch->>SKU: Turn 2: run_merchandising_elasticity_model(upstream_store_findings)
+    SKU->>State: Read demand_uplift_ratio -> Reconcile SKU elasticity & write sku_deficits_by_id
+
+    Orch->>Sup: Turn 3: run_supplier_network_capacity_audit(upstream_sku_findings)
+    Sup->>State: Read sku_deficits_by_id -> Map SUP-to-SKU shortages & compute air-freight PO surcharges
+
+    Orch->>Ful: Turn 4: run_omnichannel_fulfillment_stress_test(store_findings, sku_findings)
+    Ful->>State: Read total_units_demanded & critical_store_ids -> Stress-test BOPIS/SFS/DC/POS
+
+    Orch->>State: Step E: Verify state_tracker all True -> Synthesize cross-domain KPIs & Interventions
+    Orch-->>UI: Stream JSON-RPC 2.0 A2UI Dashboard + Prescriptive Interventions over SSE
 ```
 
-### Subagent Routing Isolation
-To prevent circular delegation and infinite loops, all worker subagents are locked down in their definitions:
+### Subagent Routing Isolation & ADK Lifecycle Hooks
+To prevent circular delegation and infinite loops, all worker subagents enforce routing isolation and expose ADK-compliant `callback_context` lifecycle hooks:
 ```python
-sub_agent = LlmAgent(
-    name="store_demand_agent",
-    disallow_transfer_to_parent=True,
-    disallow_transfer_to_peers=True,
-)
+class StoreDemandAgent:
+    def __init__(self):
+        self.name = "store_demand_agent"
+        self.disallow_transfer_to_parent = True
+        self.disallow_transfer_to_peers = True
+
+    def before_agent_callback(self, callback_context=None): ...
+    def after_agent_callback(self, callback_context=None): ...
 ```
 
 ---
 
-## 🤖 Multi-Agent Core & 4-Pillar Mesh
+## 🤖 Multi-Agent Core & 4-Pillar State Propagation Mesh
 
-| Subagent Name | Specialized Role | Simulated Decision Boundary | Key Telemetry Output |
-| :--- | :--- | :--- | :--- |
-| **`store_demand_agent`** | Regional Foot Traffic & Physical Retail Specialist | Foot-traffic surges (+85% to +145%), regional sell-through velocity, backroom staging capacity, localized stockout probabilities. | Stockout day/hour per store, foot traffic uplift, localized cannibalization. |
-| **`sku_inventory_agent`** | Merchandising & Unit Economics Specialist | Promotional price elasticity (2.1x to 3.1x), unit margin dilution, Gross Margin Return on Investment (GMROI), national stock depletion timelines. | Hero SKU unit deficit, cannibalization targets, blended gross margin impact. |
-| **`supplier_capacity_agent`** | Global Supply Chain & Manufacturing Specialist | Tier-1 & Tier-2 component lead times (standard 14–28 days vs 3–8 days air freight), factory utilization (up to 96.4%), vendor OTIF compliance. | Constrained vendor list, emergency PO surcharges, raw material bottleneck alerts. |
-| **`fulfillment_logistics_agent`** | Omnichannel Logistics & Fulfillment Specialist | BOPIS locker saturation, Ship-from-Store (SFS) packing station bottlenecks, Central DC sorting lines, POS cashier queue SLA breaches. | Labor capacity utilization %, carrier pickup cutoff risks, SLA breach rates. |
+| Subagent Name | Primary Tool Method | Upstream `session_state` Consumed | Downstream `session_state` Published | Closed-Loop Guardrail Response |
+| :--- | :--- | :--- | :--- | :--- |
+| **`store_demand_agent`** | `run_store_network_demand_model` | `promo_parameters` (`forecast_multiplier`, `duration_days`), `applied_interventions` | `store_findings`: `total_projected_store_units`, `demand_uplift_ratio`, `critical_store_ids`, `peak_store_risk_pct`, `store_matrix` | **`INTV-01`**: Adds +200 reserve stock to `STR-101`/`STR-112` & caps BOPIS intake (-10%).<br>**`INTV-03`**: Diverts SFS demand (-12%) from constrained stores. |
+| **`sku_inventory_agent`** | `run_merchandising_elasticity_model` | `store_findings` (`demand_uplift_ratio`, `total_projected_store_units`), `promo_parameters` | `sku_findings`: `sku_deficits_by_id`, `deficit_units_num`, `net_unmitigated_deficit`, `total_promo_revenue_num`, `sku_matrix` | **`INTV-02`**: Injects expedited air-freight units (+1,200 `SKU-9901`, +800 `SKU-6612`).<br>**`INTV-04`**: Steps up `SKU-9901` price to `$699.99`, curbing velocity by 24%. |
+| **`supplier_capacity_agent`** | `run_supplier_network_capacity_audit` | `sku_findings` (`sku_deficits_by_id`, `deficit_units_num`) via `SUPPLIER_TO_SKU_MAP` | `supplier_findings`: `required_emergency_surge_units`, `total_expedited_surcharge_num`, `constrained_suppliers`, `supplier_matrix` | **`INTV-02`**: Transitions `SUP-801` & `SUP-619` status to `EXPEDITED_PO_ACTIVE` with 6–8 day air-lift SLAs. |
+| **`fulfillment_logistics_agent`** | `run_omnichannel_fulfillment_stress_test` | `store_findings` (`critical_store_ids`) + `sku_findings` (`total_units_demanded`) | `fulfillment_findings`: `total_omnichannel_orders`, `bopis_utilization_num`, `sfs_utilization_num`, `dc_headroom_pct`, `channel_matrix` | **`INTV-01` & `INTV-03`**: Reroutes overflow volume from `BOPIS` (112% $\rightarrow$ 88%) and `SFS` (104% $\rightarrow$ 83%) to `Central DC DTC`. |
 
 ---
 
 ## 🧠 Fractal Chain of Thought (FCoT) Synthesis
 
-The `LeadPromotionOrchestrator` avoids flat, single-pass heuristic summaries. Instead, it executes recursive descent across three distinct analytical scales:
+The `LeadPromotionOrchestrator` avoids flat, single-pass heuristic summaries. Instead, once `self.state_tracker` confirms all four specialist subagents have written their findings to `self.session_state`, it executes recursive descent across three distinct analytical scales:
 
 ```mermaid
 graph TD
@@ -138,9 +140,9 @@ graph TD
     Micro -.->|Hillclimbing Gap-Check & Refinement| Macro
 ```
 
-1. **Macro-Scale Analysis**: Evaluates total gross revenue potential ($6.07M), top-line volume elasticity (2.85x), and blended enterprise gross margin compression (38.0% reg down to 28.5% promo).
-2. **Meso-Scale Analysis**: Pinpoints regional demand asymmetries (Northeast and West coast urban corridors) and cross-channel capacity shifts (BOPIS at 112% overload vs Central DC with 12% available buffer headroom).
-3. **Micro-Scale Analysis**: Identifies exact store failures (Manhattan Flagship STR-101 stockout by Day 2, 14:00), specific SKU deficits (SKU-9901 OLED TV short by 1,350 units), and supplier expediting fees.
+1. **Macro-Scale Analysis**: Dynamically evaluates gross revenue (`sku_findings["total_promo_revenue_num"]`), top-line volume elasticity, and blended GMROI across any preset or custom discount prompt.
+2. **Meso-Scale Analysis**: Pinpoints regional demand asymmetries (`store_findings["critical_store_ids"]`) and cross-channel capacity shifts (`fulfillment_findings["bopis_utilization_num"]` vs `dc_headroom_pct`).
+3. **Micro-Scale Analysis**: Synthesizes exact store breach hours, per-SKU unit shortages (`sku_deficits_by_id`), and supplier emergency PO surcharges (`supplier_findings["total_expedited_surcharge_num"]`).
 
 ---
 
@@ -150,56 +152,56 @@ The presentation layer compiles UI widgets natively at runtime from declarative 
 
 ### Supported A2UI Component Primitives
 - **`Dashboard`**: Root layout wrapper managing title, subtitle, and responsive component grids.
-- **`MetricGrid`**: Responsive KPI card row with dynamic status coloring (`positive`, `warning`, `critical`).
+- **`MetricGrid`**: Responsive KPI card row dynamically populated from `session_state` with live status coloring (`positive`, `warning`, `critical`).
 - **`Tabs` / `TabContent`**: Interactive multi-tab container isolating granular operational matrices.
-- **`Table`**: Multi-column data grid with automated status badge formatting (`CRITICAL_STOCKOUT`, `OPTIMAL`, `CONSTRAINED`, `HIGH_RISK`).
+- **`Table`**: Multi-column data grid with automated status badge formatting (`CRITICAL_STOCKOUT`, `OPTIMAL`, `CONSTRAINED`, `EXPEDITED_PO_ACTIVE`, `HIGH_RISK`).
 - **`AlertBanner`**: Executive-grade risk broadcast banner with severity levels (`critical`, `warning`, `info`).
 - **`Card`**: Rich text container parsing Markdown hierarchies, lists, and multi-scale synthesis notes.
-- **`InterventionList`**: Actionable cards featuring trigger thresholds, impact quantification, implementation costs, projected ROI, and interactive **`⚡ Apply Intervention`** execution triggers.
+- **`InterventionList`**: Actionable cards featuring trigger thresholds, dynamically quantified risk mitigation, implementation costs, projected ROI, and interactive **`⚡ Apply Intervention`** execution triggers.
 
 ---
 
 ## 📡 Real-Time SSE JSON-RPC 2.0 Telemetry Stream
 
-The backend `/api/chat/stream` endpoint continuously pushes standardized JSON-RPC 2.0 frames over a single non-blocking `text/event-stream` pipeline:
+The backend `/api/chat/stream` endpoint continuously pushes standardized JSON-RPC 2.0 frames over a single non-blocking `text/event-stream` pipeline, including live cross-agent parameters in `onToolCall`:
 
 ```json
-/* 1. Reasoning Frame */
-data: {"jsonrpc": "2.0", "method": "onAgentThought", "params": {"author": "LeadPromotionOrchestrator", "message": "Decomposing promotion pre-flight analysis request..."}}
+/* 1. Intent Disambiguation & Reasoning Frame */
+data: {"jsonrpc": "2.0", "method": "onAgentThought", "params": {"author": "LeadPromotionOrchestrator", "message": "Decomposing promotion pre-flight analysis for 'Summer Electronics & Appliance Blast (30-35% Off)' (Discount: 28-35%, Duration: 4d, Demand Multiplier: 2.7x)..."}}
 
 /* 2. Predictive Handoff Frame (triggers glowing UI node) */
-data: {"jsonrpc": "2.0", "method": "onAgentDelegation", "params": {"author": "LeadPromotionOrchestrator", "target": "store_demand_agent", "message": "Dispatching store foot traffic simulation."}}
+data: {"jsonrpc": "2.0", "method": "onAgentDelegation", "params": {"author": "LeadPromotionOrchestrator", "target": "sku_inventory_agent", "message": "Turn 2: Passing 15,900 projected store units (1.00x uplift) to SKU Elasticity & GMROI model."}}
 
-/* 3. Resilient Tool Call Frame */
-data: {"jsonrpc": "2.0", "method": "onToolCall", "params": {"author": "store_demand_agent", "tool": "RunStoreNetworkDemandModel", "arguments": {"promo_campaign": "Summer Tech Blast", "geo_clusters": 6}}}
+/* 3. State-Coupled Tool Call Frame */
+data: {"jsonrpc": "2.0", "method": "onToolCall", "params": {"author": "sku_inventory_agent", "tool": "run_merchandising_elasticity_model", "arguments": {"discount_tier": "28-35%", "upstream_store_units": 15900, "store_demand_uplift_ratio": 1.0}}}
 
 /* 4. Declarative A2UI Schema Delivery Frame */
-data: {"jsonrpc": "2.0", "method": "onUiComponentDelivery", "params": {"author": "LeadPromotionOrchestrator", "ui_specification": "2.0", "payload": {"type": "Dashboard", "id": "promo_dashboard", "components": [...]}}}
+data: {"jsonrpc": "2.0", "method": "onUiComponentDelivery", "params": {"author": "LeadPromotionOrchestrator", "ui_specification": "2.0", "payload": {"type": "Dashboard", "id": "promotion_preflight_simulator", "components": [...]}}}
 
 /* 5. Terminal Completion Frame */
-data: {"jsonrpc": "2.0", "method": "onSimulationComplete", "params": {"status": "SUCCESS", "executive_decision": "ACTION_REQUIRED_BEFORE_LAUNCH", "interventions_count": 4, "margin_protected": "$1,430,000"}}
+data: {"jsonrpc": "2.0", "method": "onSimulationComplete", "params": {"status": "SUCCESS", "executive_decision": "ACTION_REQUIRED_BEFORE_LAUNCH", "interventions_count": 4, "projected_revenue_impact": "$6,073,794", "margin_protected": "$1,526,250"}}
 ```
 
 ---
 
-## 🛡️ Prescriptive Interventions & Circuit Breakers
+## 🛡️ Closed-Loop Prescriptive Interventions & Circuit Breakers
 
-When vulnerabilities are discovered during simulation, the orchestrator synthesizes four deterministic, high-ROI interventions:
+When vulnerabilities are discovered during simulation, the orchestrator cross-correlates `store_findings`, `sku_findings`, `supplier_findings`, and `fulfillment_findings` to synthesize four high-ROI interventions:
 
 ```
 +------------------------------------------------------------------------------------------------------------------------+
 |                                    SYNTHESIZED PRESCRIPTIVE INTERVENTIONS MATRIX                                       |
 +----------+------------------------------------+---------------+--------------------------------------+-----------------+
-| ID       | Title                              | Priority      | Trigger Threshold                    | Expected ROI    |
+| ID       | Title                              | Priority      | Cross-Agent Trigger Threshold        | Closed-Loop Effect|
 +----------+------------------------------------+---------------+--------------------------------------+-----------------+
-| INTV-01  | Dynamic Digital Buffer Lock        | P0 IMMEDIATE  | Store stockout > 60% OR BOPIS > 100% | 34.1x ROI       |
-| INTV-02  | Expedited Tier-1 Supplier Pre-PO   | P0 CRITICAL   | SKU stockout before Day 3 of promo   | 10.2x ROI       |
-| INTV-03  | Smart SFS-to-DC Fulfillment Guard  | P1 HIGH       | SFS backlog > 120 orders / store     | 45.0x ROI       |
-| INTV-04  | Micro-Elasticity Margin Breaker    | P2 CONTINGENT | National stock < 15% before 48h      | Infinite ROI    |
-+----------+------------------------------------+---------------+--------------------------------------+-----------------+
+| INTV-01  | Dynamic Digital Buffer Lock        | P0 IMMEDIATE  | Store stockout > 60% OR BOPIS > 100% | +400 reserve units; caps BOPIS at 90% |
+| INTV-02  | Expedited Tier-1 Supplier Pre-PO   | P0 CRITICAL   | SKU stockout before Day 3 of promo   | +2,000 air-lift units (SUP-801/619)   |
+| INTV-03  | Smart SFS-to-DC Fulfillment Guard  | P1 HIGH       | SFS backlog > 120 orders / store     | Diverts SFS volume to Central DC      |
+| INTV-04  | Micro-Elasticity Margin Breaker    | P2 CONTINGENT | National stock < 15% before 48h      | Steps SKU-9901 to $699.99 (-24% vel)  |
++------------------------------------------------------------------------------------------------------------------------+
 ```
 
-Users can click **`⚡ Apply Intervention`** directly within the A2UI interface, immediately calling `/api/interventions/apply` to engage operational guardrails across stores and channels.
+Users can click **`⚡ Apply Intervention`** directly within the A2UI interface (calling `/api/interventions/apply` to record the guardrail in `APPLIED_INTERVENTIONS`) and then click **`▶ Re-Run Multi-Agent Simulation`** to observe the closed-loop reduction in stockouts, SKU shortages, and channel congestion across all tabs.
 
 ---
 
@@ -275,7 +277,7 @@ Open **[http://localhost:5001](http://localhost:5001)** in your browser.
 
 ## 🧪 Automated Verification & Test Suite
 
-The test suite validates session management, scenario presets, full SSE JSON-RPC schema delivery, subagent analytics, and intervention circuit breakers:
+The test suite validates session management, scenario presets, full SSE JSON-RPC schema delivery, subagent analytics, cross-agent `session_state` propagation, dynamic parameter sensitivity across presets, and closed-loop intervention circuit breakers:
 
 ```bash
 PYTHONPATH=. .venv/bin/pytest tests/test_backend.py -v
@@ -283,22 +285,25 @@ PYTHONPATH=. .venv/bin/pytest tests/test_backend.py -v
 
 ### Test Results:
 ```
-============================== test session starts ==============================
-platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
-rootdir: /Users/arsanjani/AntigravityRepo/bb-mission
-plugins: mock-3.15.1, asyncio-1.4.0
+============================= test session starts ==============================
+platform linux -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /usr/local/google/home/styer/repos/bb-project
+plugins: asyncio-1.4.0, mock-3.15.1
 
-tests/test_backend.py::test_session_endpoint PASSED                      [ 11%]
-tests/test_backend.py::test_promotion_presets_endpoint PASSED            [ 22%]
-tests/test_backend.py::test_stream_endpoint_schema_compliance PASSED     [ 33%]
-tests/test_backend.py::test_store_agent_analysis PASSED                  [ 44%]
-tests/test_backend.py::test_sku_agent_analysis PASSED                    [ 55%]
-tests/test_backend.py::test_supplier_agent_analysis PASSED               [ 66%]
-tests/test_backend.py::test_fulfillment_agent_analysis PASSED            [ 77%]
-tests/test_backend.py::test_apply_intervention_endpoint PASSED           [ 88%]
-tests/test_backend.py::test_apply_invalid_intervention_endpoint PASSED   [100%]
+tests/test_backend.py::test_session_endpoint PASSED                               [  8%]
+tests/test_backend.py::test_promotion_presets_endpoint PASSED                     [ 16%]
+tests/test_backend.py::test_stream_endpoint_schema_compliance PASSED              [ 25%]
+tests/test_backend.py::test_store_agent_analysis PASSED                           [ 33%]
+tests/test_backend.py::test_sku_agent_analysis PASSED                             [ 41%]
+tests/test_backend.py::test_supplier_agent_analysis PASSED                        [ 50%]
+tests/test_backend.py::test_fulfillment_agent_analysis PASSED                     [ 58%]
+tests/test_backend.py::test_apply_intervention_endpoint PASSED                    [ 66%]
+tests/test_backend.py::test_apply_invalid_intervention_endpoint PASSED            [ 75%]
+tests/test_backend.py::test_cross_agent_state_propagation PASSED                  [ 83%]
+tests/test_backend.py::test_dynamic_parameter_sensitivity_across_presets PASSED   [ 91%]
+tests/test_backend.py::test_closed_loop_intervention_effect PASSED                [100%]
 
-============================== 9 passed in 0.21s ===============================
+============================== 12 passed in 0.37s ==============================
 ```
 
 ---
