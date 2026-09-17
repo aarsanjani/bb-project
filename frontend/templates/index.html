@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotion Pre-Flight Diagnostic & Interventions Simulator | ADK 2.x & A2UI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+    <!-- Top Global App Bar -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand-logo">
+                <span class="logo-icon">⚡</span>
+                <div class="logo-text">
+                    <span class="logo-title">PROMO-SIM <span class="badge-accent">ADK 2.x</span></span>
+                    <span class="logo-subtitle">Cross-Domain Merchandising, Supply Chain & Interventions Engine</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="orchestrator-status-pill">
+                <span class="status-pulse-dot"></span>
+                <span class="status-text" id="orchestratorStatusText">Multi-Agent Mesh: Active & Ready</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="session-badge">
+                <span class="session-label">SESSION:</span>
+                <span class="session-id" id="displaySessionId">sim-session-live</span>
+            </div>
+            <div class="platform-pill">
+                <span class="gcp-spark">✦</span> Google Gen AI & Vertex AI
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Shell -->
+    <main class="app-container">
+        <!-- Left Sidebar: Mesh Topology & Scenario Controller -->
+        <aside class="sidebar-panel">
+            <!-- Scenario Preset Selector -->
+            <section class="panel-section">
+                <div class="section-header">
+                    <h3>Simulation Scenario</h3>
+                    <span class="info-pill">Pre-Flight</span>
+                </div>
+                <div class="form-group">
+                    <label for="promoPresetSelect">Select Promotion Campaign</label>
+                    <select id="promoPresetSelect" class="custom-select">
+                        <option value="promo-summer-tech">Summer Electronics & Appliance Blast (30-35% Off)</option>
+                        <option value="promo-flash-weekend">Flash 48-Hour Omni-Deals (40% Off Storewide)</option>
+                        <option value="promo-apparel-home">Fall Home Essentials & Lifestyle Upgrade (25% Off)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customPromptInput">Orchestrator Prompt / Natural Language Intent</label>
+                    <textarea id="customPromptInput" class="custom-textarea" rows="3" placeholder="Enter promotion scope or questions..."></textarea>
+                </div>
+                <button id="runSimulationBtn" class="btn btn-primary btn-block">
+                    <span class="btn-icon">▶</span> Run Full Multi-Agent Simulation
+                </button>
+            </section>
+
+            <!-- Agent Mesh Topology Visualizer -->
+            <section class="panel-section topology-section">
+                <div class="section-header">
+                    <h3>Agent Mesh Topology</h3>
+                    <span class="badge-status-mesh" id="meshStatusBadge">Idle</span>
+                </div>
+                <div class="mesh-network-graph" id="meshNetworkGraph">
+                    <!-- Orchestrator Node -->
+                    <div class="agent-node-card active-lead" id="node_LeadPromotionOrchestrator">
+                        <div class="node-icon">👑</div>
+                        <div class="node-info">
+                            <div class="node-title">Lead Promotion Orchestrator</div>
+                            <div class="node-role">FCoT Synthesizer & Router</div>
+                        </div>
+                        <div class="node-status-indicator ready" id="status_LeadPromotionOrchestrator"></div>
+                    </div>
+
+                    <!-- Spoke Connectors -->
+                    <div class="topology-spokes">
+                        <div class="spoke-line" id="spoke_store"></div>
+                        <div class="spoke-line" id="spoke_sku"></div>
+                        <div class="spoke-line" id="spoke_supplier"></div>
+                        <div class="spoke-line" id="spoke_fulfillment"></div>
+                    </div>
+
+                    <!-- 4 Specialized Worker Nodes -->
+                    <div class="subagent-grid">
+                        <div class="agent-node-card worker-node" id="node_store_demand_agent">
+                            <div class="node-icon">🏬</div>
+                            <div class="node-info">
+                                <div class="node-title">store_demand_agent</div>
+                                <div class="node-role">Regional Foot Traffic & Stockouts</div>
+                            </div>
+                            <div class="node-status-indicator" id="status_store_demand_agent"></div>
+                        </div>
+
+                        <div class="agent-node-card worker-node" id="node_sku_inventory_agent">
+                            <div class="node-icon">🏷️</div>
+                            <div class="node-info">
+                                <div class="node-title">sku_inventory_agent</div>
+                                <div class="node-role">Price Elasticity & GMROI</div>
+                            </div>
+                            <div class="node-status-indicator" id="status_sku_inventory_agent"></div>
+                        </div>
+
+                        <div class="agent-node-card worker-node" id="node_supplier_capacity_agent">
+                            <div class="node-icon">🏭</div>
+                            <div class="node-info">
+                                <div class="node-title">supplier_capacity_agent</div>
+                                <div class="node-role">Vendor Lead Times & OTIF</div>
+                            </div>
+                            <div class="node-status-indicator" id="status_supplier_capacity_agent"></div>
+                        </div>
+
+                        <div class="agent-node-card worker-node" id="node_fulfillment_logistics_agent">
+                            <div class="node-icon">🚚</div>
+                            <div class="node-info">
+                                <div class="node-title">fulfillment_logistics_agent</div>
+                                <div class="node-role">BOPIS / SFS / DC Capacity</div>
+                            </div>
+                            <div class="node-status-indicator" id="status_fulfillment_logistics_agent"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Right Content Area: Terminal & Dynamic A2UI Schema Canvas -->
+        <section class="content-panel">
+            <!-- Cognitive Trace & Handoff Live Stream -->
+            <div class="trace-terminal-wrapper" id="traceTerminalWrapper">
+                <div class="terminal-header">
+                    <div class="terminal-title">
+                        <span class="terminal-icon">📟</span> Live Multi-Agent Cognitive Trace & Tool Invocations
+                    </div>
+                    <div class="terminal-actions">
+                        <button id="toggleTerminalBtn" class="btn-xs">Collapse Terminal</button>
+                        <button id="clearTerminalBtn" class="btn-xs">Clear</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="chatTerminal">
+                    <div class="terminal-entry system-welcome">
+                        <span class="terminal-timestamp">[SYSTEM READY]</span>
+                        <span class="terminal-msg">Connected to ADK 2.x Hub-and-Spoke Mesh. Select a promotion scenario and click "Run Full Multi-Agent Simulation" to begin.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic A2UI Canvas (Rendered via Schema Factory) -->
+            <div class="a2ui-canvas" id="a2uiCanvas">
+                <div class="empty-state-card">
+                    <div class="empty-state-icon">📊</div>
+                    <h2>Promotion Simulation Dashboard</h2>
+                    <p>Execute the pre-flight simulation to stream live multi-agent diagnostics across stores, SKUs, suppliers, fulfillment channels, and actionable interventions.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
