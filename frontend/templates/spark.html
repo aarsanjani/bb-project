@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark | PIC · 7-Eleven — Q4 Chilled RTE Push Risk Register</title>
+    <link rel="stylesheet" href="/static/css/spark.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-spark">
+    <!-- Top Spark Header Bar -->
+    <header class="sp-header">
+        <div class="sp-header-left">
+            <div class="sp-logo">
+                <span class="sp-spark-icon">✦</span>
+                <span class="sp-brand-name">Spark</span>
+            </div>
+            <div class="sp-breadcrumbs">
+                <span class="sp-crumb sp-tenant-pill"><span class="tenant-dot"></span> PIC · 7-Eleven</span>
+                <span class="sp-slash">/</span>
+                <span class="sp-crumb">Campaign Ops</span>
+                <span class="sp-slash">/</span>
+                <span class="sp-crumb active">Q4 Chilled RTE Push</span>
+            </div>
+        </div>
+
+        <div class="sp-header-right">
+            <div class="sp-view-switchers">
+                <a href="/" class="sp-nav-pill">⚡ A2UI Diagnostics</a>
+                <a href="/twin" class="sp-nav-pill">📊 Digital Twin</a>
+            </div>
+            <button class="sp-btn-replay" id="btnReplaySwarm">
+                <span class="sp-replay-icon">↺</span> Replay
+            </button>
+            <div class="sp-user-profile">
+                <div class="sp-user-text">
+                    <span class="user-name">Ploy Siriwan</span>
+                    <span class="user-role">CAMPAIGN MANAGER</span>
+                </div>
+                <div class="sp-avatar">PS</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Swarm Workflow Pipeline Steps -->
+    <div class="sp-pipeline-steps-bar">
+        <div class="step-item completed"><span class="step-num">1</span> Local promotion files</div>
+        <div class="step-item completed"><span class="step-num">2</span> Connect BigQuery</div>
+        <div class="step-item completed"><span class="step-num">3</span> Connect GCS knowledge</div>
+        <div class="step-item completed"><span class="step-num">4</span> Call Campaign Assistant</div>
+        <div class="step-item completed"><span class="step-num">5</span> Agent swarm &middot; Risk Manager</div>
+        <div class="step-item active-current"><span class="step-num">6</span> Risk register + interventions</div>
+    </div>
+
+    <!-- Main Workspace Layout -->
+    <div class="sp-workspace-grid">
+        <!-- LEFT COLUMN: Files, Data Connectors, Skills, Governance -->
+        <aside class="sp-left-panel">
+            <!-- Local Promo Files -->
+            <div class="sp-card sp-files-card">
+                <div class="sp-files-list">
+                    <div class="file-item"><span class="file-icon xlsx">📊</span> promo_sku_list_v3.xlsx</div>
+                    <div class="file-item"><span class="file-icon docx">📄</span> campaign_goals_FY26Q4.docx</div>
+                    <div class="file-item"><span class="file-icon folder">📁</span> POS_creative_pack/ <span class="file-meta">(18)</span></div>
+                </div>
+                <div class="sp-quick-prompts">
+                    <button class="quick-prompt-btn">What's the promotion?</button>
+                    <button class="quick-prompt-btn">What's the goal?</button>
+                </div>
+            </div>
+
+            <!-- Connected Data -->
+            <div class="sp-card sp-connected-data-card">
+                <div class="sp-section-heading">CONNECTED DATA</div>
+                
+                <!-- BigQuery Connector -->
+                <div class="connector-block">
+                    <div class="connector-header">
+                        <div class="connector-title">
+                            <span class="connector-icon bq">⚡</span> BigQuery
+                        </div>
+                        <span class="badge-linked">LINKED</span>
+                    </div>
+                    <div class="connector-dataset">pic-7e-prod.retail_core</div>
+                    <div class="table-pills">
+                        <span class="table-pill">stores</span>
+                        <span class="table-pill">sku_master</span>
+                        <span class="table-pill">suppliers</span>
+                        <span class="table-pill">fulfillment_channels</span>
+                        <span class="table-pill">pos_txn_daily</span>
+                        <span class="table-pill">inventory_snapshot</span>
+                    </div>
+                </div>
+
+                <!-- Cloud Storage Connector -->
+                <div class="connector-block">
+                    <div class="connector-header">
+                        <div class="connector-title">
+                            <span class="connector-icon gcs">☁</span> Cloud Storage
+                        </div>
+                        <span class="badge-linked">LINKED</span>
+                    </div>
+                    <div class="connector-dataset">gs://pic-7e-knowledge/</div>
+                    <div class="table-pills">
+                        <span class="table-pill">trade_promo_policy_v4.2</span>
+                        <span class="table-pill">cold_chain_sop</span>
+                        <span class="table-pill">post_campaign_reviews/</span>
+                        <span class="table-pill">supplier_MSA/</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skill -->
+            <div class="sp-card sp-skill-card">
+                <div class="sp-section-heading">SKILL</div>
+                <div class="skill-content">
+                    <div class="skill-name"><span class="skill-icon">⚡</span> Campaign Assistant</div>
+                    <p class="skill-desc">Swarms a cross-functional agent team to pressure-test a promotion before launch.</p>
+                    <div class="skill-tags">
+                        <span class="skill-tag">risk-manager</span>
+                        <span class="skill-tag">3 agents</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Governance -->
+            <div class="sp-card sp-governance-card">
+                <div class="sp-section-heading">GOVERNANCE</div>
+                <ul class="gov-bullets">
+                    <li>Local files never leave the tenant.</li>
+                    <li>BQ read-only &middot; row-level policy tags honoured.</li>
+                    <li>Every finding carries a source citation.</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- CENTER COLUMN: Risk Cards & Executive Verdict Summary -->
+        <main class="sp-center-panel">
+            <div class="risk-cards-stream" id="riskCardsContainer">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Executive Verdict Summary Card -->
+            <div class="sp-summary-card">
+                <div class="summary-badge-header">
+                    <span class="summary-spark-badge">✦</span>
+                    <span class="summary-title">SUMMARY</span>
+                </div>
+
+                <div class="verdict-banner">
+                    <span class="verdict-label">VERDICT &middot; <strong>DO NOT LAUNCH AS BRIEFED</strong></span>
+                </div>
+
+                <div class="summary-metrics-grid">
+                    <div class="summary-metric-tile">
+                        <div class="sm-value color-coral">6</div>
+                        <div class="sm-label">risk factors</div>
+                        <div class="sm-subtext">3 high severity</div>
+                    </div>
+                    <div class="summary-metric-tile">
+                        <div class="sm-value color-coral">฿18.4M</div>
+                        <div class="sm-label">unfunded margin</div>
+                        <div class="sm-subtext">exposure</div>
+                    </div>
+                    <div class="summary-metric-tile">
+                        <div class="sm-value color-amber">12%</div>
+                        <div class="sm-label">goal alignment</div>
+                        <div class="sm-subtext">as briefed</div>
+                    </div>
+                    <div class="summary-metric-tile">
+                        <div class="sm-value color-green">15</div>
+                        <div class="sm-label">interventions</div>
+                        <div class="sm-subtext">6 owners &middot; T-14&rarr;T-2</div>
+                    </div>
+                </div>
+
+                <div class="summary-narrative">
+                    The mechanic is sound but it is pointed at the wrong goal. As briefed, the campaign will deliver basket uplift and lose margin, while moving <strong>new-user rate by roughly +1.2pp, not +15%</strong>. Three changes recover it: <strong>re-scope the 42 breaching SKUs</strong>, <strong>gate the deepest tier behind a first 7-App purchase</strong>, and <strong>pre-allocate hero stock to the top-1,142 store cluster</strong>. All three are feasible inside the current T-14 window.
+                </div>
+
+                <div class="summary-actions-bar">
+                    <button class="sp-btn-action primary-orange">Export risk register (XLSX)</button>
+                    <button class="sp-btn-action secondary-white">Open action plan in Sheets</button>
+                    <button class="sp-btn-action secondary-white">Share with Merchandising + Supply</button>
+                    <button class="sp-btn-action secondary-white">Re-run with re-scoped SKU list</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT COLUMN: Run Progress, Risk Heat Map, Activity, Run Ledger -->
+        <aside class="sp-right-panel">
+            <!-- Run Progress -->
+            <div class="sp-card sp-progress-card">
+                <div class="progress-header">
+                    <span class="sp-section-heading">RUN PROGRESS</span>
+                </div>
+                <div class="progress-row">
+                    <span class="stage-label">Stage</span>
+                    <span class="stage-val" id="stageStatusText">Register ready</span>
+                </div>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Risk Heat Map (3x3 Impact vs Likelihood) -->
+            <div class="sp-card sp-heatmap-card">
+                <div class="sp-section-heading">RISK HEAT MAP</div>
+                <div class="heatmap-axis-label">IMPACT &uarr; / LIKELIHOOD &rarr;</div>
+                
+                <div class="heatmap-grid-3x3" id="heatmapGrid">
+                    <!-- Row 1: High Impact -->
+                    <div class="heat-cell light-red" data-pos="0-0"></div>
+                    <div class="heat-cell med-red" data-pos="0-1">
+                        <span class="risk-chip high">02</span>
+                        <span class="risk-chip high">03</span>
+                    </div>
+                    <div class="heat-cell solid-red" data-pos="0-2">
+                        <span class="risk-chip critical">01</span>
+                    </div>
+
+                    <!-- Row 2: Med Impact -->
+                    <div class="heat-cell light-amber" data-pos="1-0"></div>
+                    <div class="heat-cell med-amber" data-pos="1-1">
+                        <span class="risk-chip med">05</span>
+                    </div>
+                    <div class="heat-cell dark-amber" data-pos="1-2">
+                        <span class="risk-chip med">04</span>
+                    </div>
+
+                    <!-- Row 3: Low Impact -->
+                    <div class="heat-cell light-teal" data-pos="2-0"></div>
+                    <div class="heat-cell med-teal" data-pos="2-1">
+                        <span class="risk-chip low">06</span>
+                    </div>
+                    <div class="heat-cell light-teal" data-pos="2-2"></div>
+                </div>
+
+                <div class="heatmap-col-labels">
+                    <span>LOW</span>
+                    <span>MED</span>
+                    <span>HIGH</span>
+                </div>
+            </div>
+
+            <!-- Activity Stream -->
+            <div class="sp-card sp-activity-card">
+                <div class="sp-section-heading">ACTIVITY</div>
+                <div class="activity-feed-list" id="activityFeedList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Run Ledger -->
+            <div class="sp-card sp-ledger-card">
+                <div class="sp-section-heading">RUN LEDGER</div>
+                <div class="ledger-rows">
+                    <div class="ledger-row">
+                        <span class="ledger-label">BQ bytes scanned</span>
+                        <span class="ledger-val">2.41 TB</span>
+                    </div>
+                    <div class="ledger-row">
+                        <span class="ledger-label">GCS docs retrieved</span>
+                        <span class="ledger-val">17 docs</span>
+                    </div>
+                    <div class="ledger-row">
+                        <span class="ledger-label">Agents spawned</span>
+                        <span class="ledger-val">3</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Bottom Chat Input & Governance Bar -->
+    <footer class="sp-chat-footer">
+        <div class="sp-chat-input-wrapper">
+            <span class="chat-input-icon">✎</span>
+            <input type="text" id="sparkChatInput" class="spark-input-field" placeholder="Ask Spark anything about this campaign...">
+            <button id="btnRunSparkQuery" class="sp-btn-run">Run &rarr;</button>
+        </div>
+        <div class="sp-chat-footer-stats">
+            <span>14K sources</span> &middot;
+            <span>4 local files attached</span> &middot;
+            <span>2 connectors live</span> &middot;
+            <span>1 skill enabled</span>
+        </div>
+    </footer>
+
+    <script src="/static/js/spark.js"></script>
+</body>
+</html>

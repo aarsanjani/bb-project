@@ -181,3 +181,32 @@ def test_pre_mortem_view(test_client):
     response = test_client.get('/twin')
     assert response.status_code == 200
     assert "Promo Pre-Mortem" in response.get_data(as_text=True)
+
+def test_spark_view(test_client):
+    """Verifies rendering of the /spark Campaign Ops view."""
+    response = test_client.get('/spark')
+    assert response.status_code == 200
+    assert "Spark" in response.get_data(as_text=True)
+    assert "Q4 Chilled RTE Push" in response.get_data(as_text=True)
+
+def test_spark_swarm_data_endpoint(test_client):
+    """Verifies Spark risk register swarm data endpoint."""
+    response = test_client.get('/api/spark/swarm-data')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["status"] == "SUCCESS"
+    assert data["campaign"]["tenant"] == "PIC · 7-Eleven"
+    assert len(data["risk_register"]) == 6
+    assert len(data["activity_log"]) >= 10
+    assert data["data_sources"]["bigquery"]["status"] == "LINKED"
+    assert data["data_sources"]["cloud_storage"]["status"] == "LINKED"
+
+def test_spark_query_endpoint(test_client):
+    """Verifies natural language querying against Spark swarm."""
+    payload = {"query": "What are the cannibalisation risks in the lunch daypart?"}
+    response = test_client.post('/api/spark/query', json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["status"] == "SUCCESS"
+    assert "cannibalisation" in data["response"].lower() or "verdict" in data["response"].lower()
+    assert len(data["citations"]) >= 1
