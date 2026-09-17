@@ -150,10 +150,25 @@ def reactive_stream_endpoint() -> Response:
         prompt = payload.get("prompt", "Simulate complete promotion across Store, SKU, Supplier and Fulfillment channels")
         session_id = payload.get("session_id", "sim-session-live")
         promo_params = payload.get("promo_params", None)
+        preset_id = payload.get("preset_id", None)
     else:
         prompt = request.args.get("prompt", "Simulate complete promotion across Store, SKU, Supplier and Fulfillment channels")
         session_id = request.args.get("session_id", "sim-session-live")
         promo_params = None
+        preset_id = request.args.get("preset_id", None)
+
+    if promo_params is None and preset_id:
+        for preset in PROMOTION_PRESETS:
+            if preset["id"] == preset_id:
+                promo_params = dict(preset)
+                break
+
+    if promo_params is not None:
+        promo_params = dict(promo_params)
+        if "applied_interventions" not in promo_params:
+            promo_params["applied_interventions"] = list(APPLIED_INTERVENTIONS)
+    elif APPLIED_INTERVENTIONS:
+        promo_params = {"applied_interventions": list(APPLIED_INTERVENTIONS)}
 
     orchestration_instance = PromotionOrchestratorEngine(
         session_id=session_id,

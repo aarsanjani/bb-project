@@ -91,8 +91,10 @@ class MultiAgentDynamicUiEngine {
         // Add start entry to terminal
         this.appendTerminalLog("System", `Starting simulation session [${this.sessionId}] for intent: "${userPrompt}"`, "system");
 
-        // Prepare query parameters
-        const queryUrl = `${this.streamApiUrl}?prompt=${encodeURIComponent(userPrompt)}&session_id=${encodeURIComponent(this.sessionId)}`;
+        // Prepare query parameters including selected preset_id
+        const presetSelect = document.getElementById("promoPresetSelect");
+        const presetId = presetSelect ? presetSelect.value : "";
+        const queryUrl = `${this.streamApiUrl}?prompt=${encodeURIComponent(userPrompt)}&session_id=${encodeURIComponent(this.sessionId)}&preset_id=${encodeURIComponent(presetId)}`;
         
         // Open EventSource SSE
         this.activeEventSource = new EventSource(queryUrl);
